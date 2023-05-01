@@ -1,57 +1,21 @@
 const router = require('express').Router()
-const Product = require('../models/Product')
-const CryptoJS = require('crypto-js')
-const {
-  verifyToken,
-  verifyTokenAndAuthorization,
-  verifyTokenAndAdmin,
-} = require("./verifyToken");
+const verify = require("../middleware/verifyToken");
+const productController = require('../controllers/productController')
+const validateCreateProductRequest = require('../middleware/validateProduct')
+
 // CREATE
-router.post("/create", verifyToken, async (req, res) => {
-  const newProduct = new Product(req.body);
-  try {
-    const savedProduct = await newProduct.save();
-    res.status(200).json(savedProduct);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-})
+router.post('/create', verify.verifyTokenAndAdmin, validateCreateProductRequest, productController.createProduct)
 
 //UPDATE
-router.put("/update/:id", verifyTokenAndAdmin, async (req, res) => {
-  try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      {
-        $set: req.body,
-      },
-      { new: true }
-    );
-    res.status(200).json(updatedProduct);
-  } catch (error) {
-    res.status(500).json(error);
-  }
-});
-//DELETE
-router.delete('/delete/:id', verifyTokenAndAdmin, async (req, res) => {
-  try {
-    await Product.findByIdAndDelete(req.params.id)
-    res.status(200).json("Product has been deleted...");
-  } catch (error) {
-    res.status(500).json(error);
-  }
-})
-//GET
-router.get('/find/:id', async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id)
-    res.status(200).json(product);
-  } catch (error) {
-    res.status(500).json(error);
-  }
-})
-//GET ALL PRODUCTS
-router.get('/', async (req, res) => {
+router.put('/update/:productId', verify.verifyTokenAndAdmin, productController.updateProduct)
 
-})
+//DELETE
+router.delete('/delete/:productId', verify.verifyTokenAndAdmin, productController.deleteProduct)
+
+//GET
+router.get('/find/:productId', productController.getProductById)
+
+//GET ALL PRODUCTS
+router.get('/', productController.getAllProducts)
+
 module.exports = router
